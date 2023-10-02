@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
   Image,
   ActivityIndicator,
 } from "react-native";
@@ -13,28 +14,31 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useDispatch, useSelector } from "react-redux";
 import { authSuccess, authFail } from "../../store/reducers/auth/authSlice";
 import auth from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
-
 import { CometChat } from "@cometchat/chat-sdk-react-native";
 import { COMETCHAT_CONSTANTS } from "../../CONSTS";
-import { signUp } from "../../store/reducers/auth/authAction";
 
-const SignUpScreen = ({ navigation }: any) => {
+import { loginUser } from "../../store/reducers/auth/authAction";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+
+const windowWidth = Dimensions.get("window").width;
+
+const Login = ({ navigation }) => {
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loadingGoogle, setLoadingGoogle] = useState(false);
+
   // const [loading, setLoading] = useState(false);
   // const [error, setError] = useState(null);
-
-  const { user, isLoggedIn, error, loading } = useSelector(
-    (state) => state.auth
-  );
 
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: COMETCHAT_CONSTANTS.FIREBASE_WEB_CLIENTID,
+      prompt: "select_account",
     });
   }, []);
 
@@ -42,102 +46,135 @@ const SignUpScreen = ({ navigation }: any) => {
     setShowPassword(!showPassword);
   };
 
-  const handleSignUp = useCallback(async () => {
-    // setError(null);
-    // setLoading(true);
-    // try {
-    // const userCredential = await auth().createUserWithEmailAndPassword(
-    //   email,
-    //   password,
-    // );
-    // // .then(user => {
-    // //   console.log('User account created & signed in!');
-    // // })
-    // // .catch(error => {
-    // //   if (error.code === 'auth/email-already-in-use') {
-    // //     console.log('That email address is already in use!');
-    // //   }
-    // //   if (error.code === 'auth/invalid-email') {
-    // //     console.log('That email address is invalid!');
-    // //   }
-    // //   console.error(error);
-    // // });
-    // const firebaseUser = userCredential.user;
-    // const firebaseUID = firebaseUser.uid;
-    // // Create a CometChat user
-    // const cometChatUser = new CometChat.User(firebaseUID);
-    // cometChatUser.setName(firebaseUser.displayName || 'Test User');
-    // // Create the CometChat user using Promises
-    // await CometChat.createUser(cometChatUser, COMETCHAT_AUTHID).then(
-    //   user => {
-    //     console.log('user created', user);
-    //   },
-    //   error => {
-    //     console.log('error', error);
-    //   },
-    // );
-    // // Dispatch success action or navigate to another screen
-    // dispatch(authSuccess(firebaseUser));
-    // } catch (error) {
-    //   setError(error.message);
-    // } finally {
-    //   setLoading(false);
-    // }
-    dispatch(signUp(email, password));
-  }, [dispatch, email, password]);
+  const { user, isLoggedIn, error, loading } = useSelector(
+    (state) => state.auth
+  );
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleLogin = async () => {
     try {
       setLoadingGoogle(true);
+      // Sign in with Google
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
 
+      // Get user details from Google
+      const { idToken } = userInfo;
+
       // Sign in to Firebase with Google credentials
-      const googleCredential = auth.GoogleAuthProvider.credential(
-        userInfo.idToken
-      );
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       await auth().signInWithCredential(googleCredential);
 
-      // Register the Firebase user with CometChat using their UID
+      // Now, log in the user to CometChat
       const firebaseUser = auth().currentUser;
-      if (firebaseUser) {
-        const cometChatUser = new CometChat.User(firebaseUser.uid);
-        cometChatUser.setName(userInfo.user.name);
 
-        CometChat.createUser(cometChatUser, COMETCHAT_CONSTANTS.AUTH_KEY).then(
-          (createdUser) => {
-            // login user
-            CometChat.login(
-              createdUser.getUid(),
-              COMETCHAT_CONSTANTS.AUTH_KEY
-            ).then((user) => {
-              setLoadingGoogle(false);
-              // Navigate to the CometChat UI
-              navigation.replace("Home");
-            });
+      if (firebaseUser) {
+        const firebaseUID = firebaseUser.uid;
+        console.log(firebaseUID);
+
+        CometChat.login(firebaseUID, COMETCHAT_CONSTANTS.AUTH_KEY).then(
+          (loggedInUser) => {
+            console.log("Logged in to CometChat:", loggedInUser);
+            navigation.replace("Home");
+            setLoadingGoogle(false);
+
+            // You can navigate to the next screen or perform any other actions upon successful login.
           },
           (error) => {
             setLoadingGoogle(false);
-            console.error("Error creating CometChat user:", error);
-            // Handle the error appropriately
+
+            console.error("Error logging in to CometChat:", error);
+
+            // Handle CometChat login errors appropriately
           }
         );
+      } else {
+        console.error("Firebase user is null");
+        // Handle the case where the Firebase user is null.
       }
     } catch (error) {
       setLoadingGoogle(false);
-      console.error("Google Sign-In Error:", error);
+
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // User canceled the sign-in process
+        // Handle the case where the user cancels the Google Sign-In process.
       } else if (error.code === statusCodes.IN_PROGRESS) {
-        // Sign-in is in progress
+        // Handle the case where Google Sign-In is already in progress.
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        // Play Services not available or outdated on the device
+        // Handle the case where Play Services are not available on the device.
       } else {
         setLoadingGoogle(false);
-        // Other error occurred
+
+        console.error("Google Sign-In error:", error);
+
+        // Handle other Google Sign-In errors appropriately
       }
     }
   };
+
+  const handleEmailLogin = () => {
+    if (email && password) {
+      auth()
+        .signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+          console.log("User signed in:", user.email);
+
+          // Now, log in the user to CometChat
+          const firebaseUID = user.uid;
+          const cometChatUser = new CometChat.User(firebaseUID);
+          cometChatUser.setName(user.displayName || ""); // Set the name as needed
+          navigation.replace("Home");
+
+          // Log in the user to CometChat
+          CometChat.login(cometChatUser, COMETCHAT_CONSTANTS.AUTH_KEY).then(
+            (loggedInUser) => {
+              console.log("Logged in to CometChat:", loggedInUser);
+            },
+            (error) => {
+              console.error("Error logging in to CometChat:", error);
+
+              // Handle CometChat login errors appropriately
+            }
+          );
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.error("Email login error:", errorMessage);
+
+          // Handle Firebase email login errors appropriately
+        });
+    } else {
+      // Handle the case where email or password is missing.
+      // You can display an error message to the user.
+    }
+  };
+
+  const handleLogin = useCallback(async () => {
+    // setError(null);
+    // setLoading(true);
+    // try {
+    //   const userCredential = await auth().signInWithEmailAndPassword(
+    //     email,
+    //     password,
+    //   );
+    //   const firebaseUser = userCredential.user;
+    //   const firebaseUID = firebaseUser.uid;
+    //   console.log(firebaseUser, firebaseUID, 'Firebase Hello');
+    // } catch (error) {
+    //   console.log(error);
+    //   if (error.message) setError('Email or Password is incorrect');
+    // } finally {
+    //   setLoading(false);
+    // }
+    dispatch(loginUser(email, password));
+  }, [dispatch, email, password]);
+
+  useEffect(() => {
+    if (isLoggedIn === true) {
+      navigation.replace("Home");
+    }
+  }, [isLoggedIn]);
 
   return (
     <View style={styles.container}>
@@ -186,12 +223,14 @@ const SignUpScreen = ({ navigation }: any) => {
         }}
       >
         <Text style={{ fontSize: 22, fontWeight: "bold", color: "white" }}>
-          Hello!
+          Hello Again!
         </Text>
         <Text style={{ fontSize: 16, fontWeight: "500", color: "#969BA1" }}>
-          Welcome
+          Welcome back you've
         </Text>
-        {/* <Text style={{fontSize: 16, fontWeight: '500'}}>been missed!</Text> */}
+        <Text style={{ fontSize: 16, fontWeight: "500", color: "#969BA1" }}>
+          been missed!
+        </Text>
       </View>
 
       <View style={styles.inputContainer}>
@@ -214,7 +253,21 @@ const SignUpScreen = ({ navigation }: any) => {
             onChangeText={(text) => setPassword(text)}
             value={password}
           />
+
+          <TouchableOpacity
+            style={styles.toggleButton}
+            onPress={togglePasswordVisibility}
+          >
+            <Icon
+              name={showPassword ? "visibility" : "visibility-off"}
+              size={20}
+              color="black"
+            />
+          </TouchableOpacity>
         </View>
+        <TouchableOpacity style={styles.forgotPasswordLink}>
+          <Text style={styles.linkText}>Forgot Password?</Text>
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -223,10 +276,10 @@ const SignUpScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={styles.loginButton}
           activeOpacity={0.7}
-          onPress={handleSignUp}
           disabled={!email || !password}
+          onPress={handleLogin}
         >
-          <Text style={styles.buttonText}>Sign Up</Text>
+          <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       )}
 
@@ -236,16 +289,10 @@ const SignUpScreen = ({ navigation }: any) => {
         </View>
       ) : null}
 
-      {/* {error && (
-        <Text style={styles.errorText}>
-          {error === 'No user found' ? '' : 'User Exists'}
-        </Text>
-      )} */}
-
       <TouchableOpacity
         style={styles.googleLoginButton}
+        onPress={handleGoogleLogin}
         disabled={loadingGoogle}
-        onPress={handleGoogleSignIn}
       >
         <Image
           source={require("../../assets/icons/Google_Icons.webp")}
@@ -254,20 +301,23 @@ const SignUpScreen = ({ navigation }: any) => {
         <Text style={styles.googleButtonText}>Continue with Google</Text>
       </TouchableOpacity>
 
+      {error && (
+        <Text style={styles.errorText}>
+          {error === "No user found" ? "" : "Email or Password not correct"}
+        </Text>
+      )}
       <View style={{ flex: 1 }} />
       <View style={styles.signUpLink}>
-        <Text style={{ fontSize: 12, color: "#969BA1" }}>
-          Already a member?
-        </Text>
-        <TouchableOpacity onPress={() => navigation.push("Login")}>
-          <Text style={styles.linkText}> Login Now</Text>
+        <Text style={{ fontSize: 12, color: "#969BA1" }}>Not a member?</Text>
+        <TouchableOpacity onPress={() => navigation.push("SignUp")}>
+          <Text style={styles.linkText}> Register Now</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-export default SignUpScreen;
+export default Login;
 
 const styles = StyleSheet.create({
   container: {
@@ -280,9 +330,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  errorText: {
-    paddingVertical: 20,
-    color: "#E51D43",
+  image: {
+    width: 130,
+    height: 70,
+  },
+  inputContainer: {
+    width: "90%",
+    marginBottom: 20,
   },
   loadingOverlay: {
     position: "absolute",
@@ -293,14 +347,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
-  },
-  image: {
-    width: 130,
-    height: 70,
-  },
-  inputContainer: {
-    width: "90%",
-    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
@@ -322,11 +368,20 @@ const styles = StyleSheet.create({
     padding: 10,
     color: "white",
   },
+  forgotPasswordLink: {
+    alignSelf: "flex-end",
+    marginTop: 10,
+    color: "#E51D43",
+  },
   borderActive: {
     borderColor: "blue",
   },
   borderInactive: {
     borderColor: "black",
+  },
+  errorText: {
+    paddingVertical: 20,
+    color: "#E51D43",
   },
   loginButton: {
     backgroundColor: "#E51D43",
@@ -340,25 +395,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+
   forgotPasswordLink: {
     alignSelf: "flex-end",
     marginTop: 10,
     color: "#E51D43",
   },
-  // signUpLink: {
-  //   marginTop: 20,
-  //   flexDirection: 'row',
-  // },
-  // linkText: {
-  //   color: '#E51D43',
-  //   fontSize: 12,
-  // },
-  // buttonText: {
-  //   color: '#333',
-  //   fontSize: 18,
-  //   fontWeight: '800',
-  // },
-
+  signUpLink: {
+    marginTop: 20,
+    flexDirection: "row",
+  },
+  linkText: {
+    color: "#E51D43",
+    fontSize: 12,
+  },
   orContainer: {
     flexDirection: "row",
     alignItems: "center",

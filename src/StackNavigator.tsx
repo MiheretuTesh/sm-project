@@ -1,15 +1,55 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import { Login, SignIn, SignUp } from "./components/login";
+import Login from "./components/login/Login";
+import SignUpScreen from "./components/login/SignUp";
+import HeroScreen from "./components/login/HeroScreen";
+import { SignIn } from "./components/login";
 import { Home } from "./components/home/Home";
 import { ConversationComponentList } from "./components/conversation";
-import { CometChatConversationsWithMessages, CometChatConversations, CometChatUsersWithMessages, CometChatUsers } from "@cometchat/chat-uikit-react-native";
-import { Messages, MessageComposer, MessageHeader, MessageList, MessageModuleList } from "./components/messages";
+import {
+  CometChatConversationsWithMessages,
+  CometChatConversations,
+  CometChatUsersWithMessages,
+  CometChatUsers,
+} from "@cometchat/chat-uikit-react-native";
+import {
+  Messages,
+  MessageComposer,
+  MessageHeader,
+  MessageList,
+  MessageModuleList,
+} from "./components/messages";
 import { UserModuleList } from "./components/users/UserModuleList";
 import { Details } from "./components/users/Details";
-import { JoinGroup, AddMember, BannedMembers, CreateGroup, GroupDetails, GroupMember, GroupModuleList, Groups, GroupsWithMessages, TransferOwnership } from "./components/groups";
-import { AudioBubble, Avatar, BadgeCount, FileBubble, ImageBubble, ListItem, Localize, MessageReceipt, SharedModuleList, SoundManager, StatusIndicator, TextBubble, Theme, VideoBubble } from "./components/shared";
+import {
+  JoinGroup,
+  AddMember,
+  BannedMembers,
+  CreateGroup,
+  GroupDetails,
+  GroupMember,
+  GroupModuleList,
+  Groups,
+  GroupsWithMessages,
+  TransferOwnership,
+} from "./components/groups";
+import {
+  AudioBubble,
+  Avatar,
+  BadgeCount,
+  FileBubble,
+  ImageBubble,
+  ListItem,
+  Localize,
+  MessageReceipt,
+  SharedModuleList,
+  SoundManager,
+  StatusIndicator,
+  TextBubble,
+  Theme,
+  VideoBubble,
+} from "./components/shared";
 import { CallButton, CallFeatureList } from "./components/calls";
 import { CallBubble } from "./components/calls/CallBubble";
 import { IncomingCall } from "./components/calls/IncomingCall";
@@ -18,38 +58,58 @@ import Contacts from "./components/conversation/Contacts";
 import MessageInformation from "./components/messages/MessageInformation";
 import MediaRecorder from "./components/shared/MediaRecorder";
 
-function StackNavigator(props) {
+function StackNavigator(props: any) {
   const Stack = createStackNavigator();
 
   return (
     <NavigationContainer>
-      <Stack.Navigator headerMode="none" initialRouteName="Login">
+      <Stack.Navigator headerMode="none" initialRouteName="HeroScreen">
+        <Stack.Screen name="HeroScreen" component={HeroScreen} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="SignIn" component={SignIn} />
-        <Stack.Screen name="SignUp" component={SignUp} />
+        <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen name="ConversationsModule" component={ConversationComponentList} />
+        <Stack.Screen
+          name="ConversationsModule"
+          component={ConversationComponentList}
+        />
         <Stack.Screen name="MessagesModule" component={MessageModuleList} />
         <Stack.Screen name="CallsModule" component={CallFeatureList} />
         <Stack.Screen name="CallButton" component={CallButton} />
-        <Stack.Screen name="IncomingCall" component={IncomingCall} options={{gestureEnabled: false}} />
+        <Stack.Screen
+          name="IncomingCall"
+          component={IncomingCall}
+          options={{ gestureEnabled: false }}
+        />
         <Stack.Screen name="OutgoingCall" component={OutgoingCall} />
         <Stack.Screen name="CallBubble" component={CallBubble} />
         <Stack.Screen name="Contacts" component={Contacts} />
         <Stack.Screen name="SharedModule" component={SharedModuleList} />
         <Stack.Screen name="UsersModule" component={UserModuleList} />
         <Stack.Screen name="GroupsModule" component={GroupModuleList} />
-        <Stack.Screen name="ConversationsWithMessages" component={CometChatConversationsWithMessages} />
+        <Stack.Screen
+          name="ConversationsWithMessages"
+          component={CometChatConversationsWithMessages}
+        />
         <Stack.Screen name="Conversations" component={CometChatConversations} />
         <Stack.Screen name="Messages" component={Messages} />
         <Stack.Screen name="MessageHeader" component={MessageHeader} />
         <Stack.Screen name="MessageList" component={MessageList} />
         <Stack.Screen name="MessageComposer" component={MessageComposer} />
-        <Stack.Screen name="MessageInformation" component={MessageInformation} />
-        <Stack.Screen name="UsersWithMessages" component={CometChatUsersWithMessages} />
+        <Stack.Screen
+          name="MessageInformation"
+          component={MessageInformation}
+        />
+        <Stack.Screen
+          name="UsersWithMessages"
+          component={CometChatUsersWithMessages}
+        />
         <Stack.Screen name="Users" component={CometChatUsers} />
         <Stack.Screen name="Details" component={Details} />
-        <Stack.Screen name="GroupsWithMessages" component={GroupsWithMessages} />
+        <Stack.Screen
+          name="GroupsWithMessages"
+          component={GroupsWithMessages}
+        />
         <Stack.Screen name="Groups" component={Groups} />
         <Stack.Screen name="CreateGroup" component={CreateGroup} />
         <Stack.Screen name="JoinGroup" component={JoinGroup} />

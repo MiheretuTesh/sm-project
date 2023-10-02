@@ -9,47 +9,14 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/FontAwesome"; // Import the icons you want to use
 import {
   CometChatConversationsWithMessages,
-  CometChatConversations,
   CometChatUsersWithMessages,
-  CometChatUsers,
 } from "@cometchat/chat-uikit-react-native";
 import { CometChatGroupsWithMessages } from "@cometchat/chat-uikit-react-native";
 
-const UiKitModules = [
-  {
-    name: "Conversations",
-    info: "Conversations module helps you to list the recent conversations between your users and groups. To learn more about components click here.",
-  },
-  {
-    name: "Messages",
-    info: "Messages module helps you to send and receive in a conversation between a user or group. To learn more about its components click here.",
-  },
-  {
-    name: "Users",
-    info: "Users module helps you list all the users available in you app. To learn more about its components click here.",
-  },
-  {
-    name: "Groups",
-    info: "Groups module helps you list all the groups you are apart in your app. To learn more about its components click here.",
-  },
-  {
-    name: "Calls",
-    info: "Calls module helps you to list the recent call history between your users and groups. To learn more about this component click here.",
-  },
-  {
-    name: "Shared",
-    info: "Share module contains several resuable components that are devided into Primary, Secondary and SDKderived components. To learn more about these components click here.",
-  },
-];
-
-export const Home = ({ navigation }) => {
+export const Home = ({ navigation }: any) => {
   const Tab = createBottomTabNavigator();
 
   const { setGroup, setUser, setCall } = useContext(UserContext);
-
-  const Navigate = (to) => {
-    navigation.navigate(`${to}Module`);
-  };
 
   useEffect(() => {
     let userRequest = new CometChat.UsersRequestBuilder().setLimit(1).build();
