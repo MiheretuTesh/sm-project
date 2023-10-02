@@ -1,18 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { PermissionsAndroid, Platform, SafeAreaView, StatusBar, Text } from 'react-native';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  PermissionsAndroid,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  Text,
+} from "react-native";
 import { CometChat } from "@cometchat/chat-sdk-react-native";
-import { COMETCHAT_CONSTANTS } from './src/CONSTS';
-import { CometChatContextProvider } from '@cometchat/chat-uikit-react-native';
-import { CometChatTheme } from '@cometchat/chat-uikit-react-native';
-import { CometChatUIKit } from '@cometchat/chat-uikit-react-native';
-import StackNavigator from './src/StackNavigator';
-import { UserContextProvider } from './UserContext';
-import { CometChatIncomingCall } from '@cometchat/chat-uikit-react-native';
-import { CometChatUIEventHandler } from '@cometchat/chat-uikit-react-native';
+import { COMETCHAT_CONSTANTS } from "./src/CONSTS";
+import { CometChatContextProvider } from "@cometchat/chat-uikit-react-native";
+import { CometChatTheme } from "@cometchat/chat-uikit-react-native";
+import { CometChatUIKit } from "@cometchat/chat-uikit-react-native";
+import StackNavigator from "./src/StackNavigator";
+import { UserContextProvider } from "./UserContext";
+import { CometChatIncomingCall } from "@cometchat/chat-uikit-react-native";
+import { CometChatUIEventHandler } from "@cometchat/chat-uikit-react-native";
+import { Provider } from "react-redux/es/exports";
+import store from "./src/store/store";
+
 var listnerID = "UNIQUE_LISTENER_ID";
 
 const App = () => {
-
   const getPermissions = () => {
     if (Platform.OS == "android") {
       PermissionsAndroid.requestMultiple([
@@ -22,7 +30,7 @@ const App = () => {
         PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
       ]);
     }
-  }
+  };
 
   const [callRecevied, setCallReceived] = useState(false);
   const incomingCall = useRef(null);
@@ -36,7 +44,7 @@ const App = () => {
     })
       .then(() => {
         if (CometChat.setSource) {
-          CometChat.setSource('ui-kit', Platform.OS, 'react-native');
+          CometChat.setSource("ui-kit", Platform.OS, "react-native");
         }
       })
       .catch(() => {
@@ -57,7 +65,7 @@ const App = () => {
         onIncomingCallCancelled: (call) => {
           incomingCall.current = null;
           setCallReceived(false);
-        }
+        },
       })
     );
 
@@ -70,37 +78,37 @@ const App = () => {
 
     return () => {
       CometChatUIEventHandler.removeCallListener(listnerID);
-      CometChat.removeCallListener(listnerID)
-    }
-
+      CometChat.removeCallListener(listnerID);
+    };
   }, []);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar backgroundColor={"white"} barStyle={"dark-content"} />
-      {
-        callRecevied &&
+      {callRecevied && (
         <CometChatIncomingCall
           call={incomingCall.current}
           onDecline={(call) => {
-            setCallReceived(false)
+            setCallReceived(false);
           }}
           incomingCallStyle={{
-            backgroundColor: 'white',
-            titleColor: 'black',
-            subtitleColor: 'gray',
+            backgroundColor: "white",
+            titleColor: "black",
+            subtitleColor: "gray",
             titleFont: {
-                fontSize: 20,
-                fontWeight: 'bold'
-            }
-        }}
+              fontSize: 20,
+              fontWeight: "bold",
+            },
+          }}
         />
-      }
-      <UserContextProvider>
-        <CometChatContextProvider theme={new CometChatTheme({})}>
-          <StackNavigator />
-        </CometChatContextProvider>
-      </UserContextProvider>
+      )}
+      <Provider store={store}>
+        <UserContextProvider>
+          <CometChatContextProvider theme={new CometChatTheme({})}>
+            <StackNavigator />
+          </CometChatContextProvider>
+        </UserContextProvider>
+      </Provider>
     </SafeAreaView>
   );
 };

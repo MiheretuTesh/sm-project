@@ -8,6 +8,9 @@ import {
 } from "react-native";
 import { CometChat } from "@cometchat/chat-sdk-react-native";
 import { COMETCHAT_CONSTANTS } from "./src/CONSTS";
+import { Provider } from "react-redux/es/exports";
+import store from "./src/store/store";
+
 import {
   CometChatContextProvider,
   CometChatConversationsWithMessages,
@@ -104,7 +107,9 @@ const App = () => {
       )}
       <UserContextProvider>
         <CometChatContextProvider theme={new CometChatTheme({})}>
-          <StackNavigator />
+          <Provider store={store}>
+            <StackNavigator />
+          </Provider>
         </CometChatContextProvider>
       </UserContextProvider>
     </SafeAreaView>
