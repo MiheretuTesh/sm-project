@@ -17,6 +17,7 @@
     "@react-native-community/cli-platform-android": "^8.0.5",
     "@react-native-community/clipboard": "1.5.1",
     "@react-native-community/netinfo": "7.1.7",
+    "@react-navigation/bottom-tabs": "^6.5.9",
     "@react-navigation/native": "^5.8.10",
     "@react-navigation/stack": "^5.12.8",
     "react": "18.2.0",
@@ -27,6 +28,7 @@
     "react-native-keep-awake": "^4.0.0",
     "react-native-safe-area-context": "^3.1.9",
     "react-native-screens": "^3.25.0",
+    "react-native-vector-icons": "^10.0.0",
     "react-native-webrtc": "^111.0.3"
   },
   "devDependencies": {
